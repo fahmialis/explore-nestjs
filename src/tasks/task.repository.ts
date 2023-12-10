@@ -47,8 +47,6 @@ export class TaskRepository {
   async getTasks(params: FilterTasksDto): Promise<Task[]> {
     const query = this.taskRepository.createQueryBuilder('task');
 
-    console.log(query);
-
     const { status, search } = params;
 
     if (status) {
