@@ -3,5 +3,5 @@ import { IsEnum } from 'class-validator';
 
 export class UpdateTaskStatusDto {
   @IsEnum(TaskStatus)
-  target: TaskStatus;
+  status: TaskStatus;
 }

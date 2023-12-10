@@ -4,6 +4,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStatus } from './tasks-status.enum';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FilterTasksDto } from './dto/filter-task.dto';
 
 @Injectable()
 export class TaskRepository {
@@ -14,8 +15,6 @@ export class TaskRepository {
 
   async createTask(createTaskDto: CreateTaskDto) {
     const { title, description } = createTaskDto;
-
-    console.log(title, description);
 
     // create the object
     const task = this.taskRepository.create({
@@ -30,12 +29,41 @@ export class TaskRepository {
   }
 
   async getTaskById(id: string): Promise<Task> {
-    // if not found return 404
-
     return await this.taskRepository.findOne({
       where: {
         id,
       },
     });
+  }
+
+  async deleteTaskById(id: string) {
+    return await this.taskRepository.delete(id);
+  }
+
+  async updateTaskById(id: string, status: TaskStatus) {
+    return await this.taskRepository.update(id, { status });
+  }
+
+  async getTasks(params: FilterTasksDto): Promise<Task[]> {
+    const query = this.taskRepository.createQueryBuilder('task');
+
+    console.log(query);
+
+    const { status, search } = params;
+
+    if (status) {
+      query.andWhere('task.status = :status', { status });
+    }
+
+    if (search) {
+      query.andWhere(
+        'LOWER(task.title) LIKE :search OR LOWER(task.description) LIKE :search',
+        { search: `%${search}%` },
+      );
+    }
+
+    const tasks = await query.getMany();
+
+    return tasks;
   }
 }
