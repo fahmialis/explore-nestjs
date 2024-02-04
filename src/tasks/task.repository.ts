@@ -2,13 +2,21 @@ import { Repository } from 'typeorm';
 import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStatus } from './tasks-status.enum';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FilterTasksDto } from './dto/filter-task.dto';
 import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TaskRepository {
+  private logger = new Logger('TaskRepository', {
+    timestamp: true,
+  });
+
   constructor(
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
@@ -65,8 +73,18 @@ export class TaskRepository {
       );
     }
 
-    const tasks = await query.getMany();
+    try {
+      const tasks = await query.getMany();
 
-    return tasks;
+      return tasks;
+    } catch (error) {
+      this.logger.error(
+        `falied to get tasks for user: ${JSON.stringify(
+          user.username,
+        )}, payload: ${JSON.stringify(params)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 }
